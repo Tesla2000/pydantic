@@ -762,10 +762,28 @@ class PostgresDsn(_BaseMultiHostUrl):
         ],
     )
 
+    def __init__(self, url: str | _CoreMultiHostUrl | _BaseMultiHostUrl) -> None:
+        url = _sanitize_postgres_url(url)
+        self._url = _build_type_adapter(self.__class__).validate_python(
+            url)._url
+
     @property
     def host(self) -> str:
         """The required URL host."""
         return self._url.host  # pyright: ignore[reportAttributeAccessIssue]
+
+
+def _sanitize_postgres_url(value: Any):
+    if not isinstance(value, str):
+        return value
+    match = re.search(r"(.*://[^:]+:)([^@]+)(.*)", value)
+    if not match:
+        return value
+    prefix = match.group(1)
+    password = match.group(2)
+    suffix = match.group(3)
+    safe_password = quote(password, safe="")
+    return prefix + safe_password + suffix
 
 
 class CockroachDsn(AnyUrl):
