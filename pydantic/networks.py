@@ -9,6 +9,7 @@ from functools import lru_cache
 from importlib.metadata import version
 from ipaddress import IPv4Address, IPv4Interface, IPv4Network, IPv6Address, IPv6Interface, IPv6Network
 from typing import TYPE_CHECKING, Annotated, Any, ClassVar
+from urllib.parse import quote
 
 from pydantic_core import (
     MultiHostHost,
