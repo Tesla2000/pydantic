@@ -1,0 +1,21 @@
+name: Sync from Upstream
+
+on:
+  workflow_dispatch:      # Manual trigger from the Actions tab
+  schedule:
+    - cron: '0 3 * * *'   # Optional automatic run daily at 3 AM UTC
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sync fork from upstream
+        uses: tgymnich/fork-sync@v2.0.10
+        with:
+          token: ${{ secrets.PERSONAL_TOKEN }}
+          owner: pydantic
+          head: main
+          base: main
+          merge_method: rebase
+          pr_title: "Sync from pydantic/pydantic"
+          pr_message: "Automated sync from upstream"
