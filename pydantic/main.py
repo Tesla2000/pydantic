@@ -11,7 +11,7 @@ import sys
 import types
 import typing
 import warnings
-from collections.abc import Generator, Mapping
+from collections.abc import Container, Generator, Mapping
 from copy import copy, deepcopy
 from functools import cached_property
 from typing import (
@@ -76,7 +76,7 @@ TupleGenerator: TypeAlias = Generator[tuple[str, Any], None, None]
 # NOTE: In reality, `bool` should be replaced by `Literal[True]` but mypy fails to correctly apply bidirectional
 # type inference (e.g. when using `{'a': {'b': True}}`):
 # NOTE: Keep this type alias in sync with the stub definition in `pydantic-core`:
-IncEx: TypeAlias = Union[set[int], set[str], Mapping[int, Union['IncEx', bool]], Mapping[str, Union['IncEx', bool]]]
+IncEx: TypeAlias = Union[Container[int], Container[str], Mapping[int, Union['IncEx', bool]], Mapping[str, Union['IncEx', bool]]]
 
 _object_setattr = _model_construction.object_setattr
 
