@@ -763,15 +763,33 @@ class PostgresDsn(_BaseMultiHostUrl):
         ],
     )
 
-    def __init__(self, url: str | _CoreMultiHostUrl | _BaseMultiHostUrl) -> None:
-        url = _sanitize_postgres_url(url)
-        self._url = _build_type_adapter(self.__class__).validate_python(
-            url)._url
-
     @property
     def host(self) -> str:
         """The required URL host."""
         return self._url.host  # pyright: ignore[reportAttributeAccessIssue]
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls, source: type[_BaseMultiHostUrl], handler: GetCoreSchemaHandler
+    ) -> core_schema.CoreSchema:
+        def wrap_val(v, h):
+            if isinstance(v, source):
+                return v
+            if isinstance(v, _BaseMultiHostUrl):
+                v = str(v)
+            v = _sanitize_postgres_url(v)
+            core_url = h(v)
+            instance = source.__new__(source)
+            instance._url = core_url
+            return instance
+
+        return core_schema.no_info_wrap_validator_function(
+            wrap_val,
+            schema=core_schema.multi_host_url_schema(**cls._constraints.defined_constraints),
+            serialization=core_schema.plain_serializer_function_ser_schema(
+                cls.serialize_url, info_arg=True, when_used='always'
+            ),
+        )
 
 
 def _sanitize_postgres_url(value: Any):
