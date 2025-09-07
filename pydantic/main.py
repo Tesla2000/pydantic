@@ -979,11 +979,8 @@ class BaseModel(metaclass=_model_construction.ModelMetaclass):
                 except AttributeError:
                     pydantic_extra = None
 
-                if pydantic_extra:
-                    try:
-                        return pydantic_extra[item]
-                    except KeyError as exc:
-                        raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}') from exc
+                if pydantic_extra and item in pydantic_extra:
+                    return pydantic_extra[item]
                 else:
                     if hasattr(self.__class__, item):
                         return super().__getattribute__(item)  # Raises AttributeError if appropriate
@@ -1243,11 +1240,11 @@ class BaseModel(metaclass=_model_construction.ModelMetaclass):
     # ##### Deprecated methods from v1 #####
     @property
     @typing_extensions.deprecated(
-        'The `__fields__` attribute is deprecated, use `model_fields` instead.', category=None
+        'The `__fields__` attribute is deprecated, use the `model_fields` class property instead.', category=None
     )
     def __fields__(self) -> dict[str, FieldInfo]:
         warnings.warn(
-            'The `__fields__` attribute is deprecated, use `model_fields` instead.',
+            'The `__fields__` attribute is deprecated, use the `model_fields` class property instead.',
             category=PydanticDeprecatedSince20,
             stacklevel=2,
         )
