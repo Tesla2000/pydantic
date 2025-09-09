@@ -9,6 +9,7 @@ from functools import lru_cache
 from importlib.metadata import version
 from ipaddress import IPv4Address, IPv4Interface, IPv4Network, IPv6Address, IPv6Interface, IPv6Network
 from typing import TYPE_CHECKING, Annotated, Any, ClassVar
+from urllib.parse import quote
 
 from pydantic_core import (
     MultiHostHost,
@@ -766,6 +767,42 @@ class PostgresDsn(_BaseMultiHostUrl):
     def host(self) -> str:
         """The required URL host."""
         return self._url.host  # pyright: ignore[reportAttributeAccessIssue]
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls, source: type[_BaseMultiHostUrl], handler: GetCoreSchemaHandler
+    ) -> core_schema.CoreSchema:
+        def wrap_val(v, h):
+            if isinstance(v, source):
+                return v
+            if isinstance(v, _BaseMultiHostUrl):
+                v = str(v)
+            v = _sanitize_postgres_url(v)
+            core_url = h(v)
+            instance = source.__new__(source)
+            instance._url = core_url
+            return instance
+
+        return core_schema.no_info_wrap_validator_function(
+            wrap_val,
+            schema=core_schema.multi_host_url_schema(**cls._constraints.defined_constraints),
+            serialization=core_schema.plain_serializer_function_ser_schema(
+                cls.serialize_url, info_arg=True, when_used='always'
+            ),
+        )
+
+
+def _sanitize_postgres_url(value: Any):
+    if not isinstance(value, str):
+        return value
+    match = re.search(r"(.*://[^:]+:)([^@]+)(.*)", value)
+    if not match:
+        return value
+    prefix = match.group(1)
+    password = match.group(2)
+    suffix = match.group(3)
+    safe_password = quote(password, safe="")
+    return prefix + safe_password + suffix
 
 
 class CockroachDsn(AnyUrl):
