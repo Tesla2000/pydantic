@@ -257,7 +257,7 @@ This is the perfect use case for a callable `Discriminator`.
     and in the worst case, get runtime errors during validation.
 
 ```python
-from typing import Annotated, Any, Literal, Union
+from typing import Annotated, Any, Literal, Optional, Union
 
 from pydantic import BaseModel, Discriminator, Tag
 
@@ -275,7 +275,7 @@ class PumpkinPie(Pie):
     filling: Literal['pumpkin'] = 'pumpkin'
 
 
-def get_discriminator_value(v: Any) -> str:
+def get_discriminator_value(v: Any) -> Optional[str]:
     if isinstance(v, dict):
         return v.get('fruit', v.get('filling'))
     return getattr(v, 'fruit', getattr(v, 'filling', None))
